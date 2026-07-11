@@ -12,8 +12,11 @@ class Interaction(BaseModel):
     followUp: str
 
 
+from typing import Optional
+
 class ChatRequest(BaseModel):
     message: str
+    interaction_id: Optional[int] = None
 
 
 class ChatResponse(BaseModel):

@@ -47,9 +47,12 @@ class Interaction(Base):
     follow_up_date = Column(Date)
 
     # CRM Notes
+    outcomes = Column(Text)
     action_items = Column(Text)
     next_steps = Column(Text)
     remarks = Column(Text)
+    samples_distributed = Column(Text)
+    
 
     # Timestamp
     created_at = Column(

@@ -4,10 +4,15 @@ import json
 
 from models import ChatRequest
 from schemas import InteractionResponse
-from tools import log_interaction
+
+from tools import (
+    log_interaction,
+    edit_interaction as edit_interaction_ai
+)
 
 from database import SessionLocal, engine
 from db_models import Base
+
 from crud import (
     create_interaction,
     get_all_interactions,
@@ -16,14 +21,28 @@ from crud import (
     delete_interaction,
 )
 
-# Create tables
+
+# =====================================
+# CREATE DATABASE TABLES
+# =====================================
+
 Base.metadata.create_all(bind=engine)
+
+
+# =====================================
+# FASTAPI APP
+# =====================================
 
 app = FastAPI(
     title="AI CRM HCP API",
-    description="AI-powered CRM Backend for Healthcare Professional (HCP) Interaction Management",
+    description="AI powered CRM Backend",
     version="1.0.0"
 )
+
+
+# =====================================
+# CORS
+# =====================================
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,183 +53,404 @@ app.add_middleware(
 )
 
 
-@app.get(
-    "/",
-    tags=["Home"],
-    summary="Backend Status"
-)
+# =====================================
+# HOME
+# =====================================
+
+@app.get("/")
 def home():
+
     return {
         "message": "AI CRM Backend Running 🚀"
     }
 
 
-# ===============================
-# CHAT API
-# ===============================
 
-@app.post(
-    "/chat",
-    tags=["AI Assistant"],
-    summary="Extract and Save HCP Interaction"
-)
+# =====================================
+# CHAT API
+# =====================================
+
+@app.post("/chat")
 async def chat(request: ChatRequest):
 
     db = SessionLocal()
 
     try:
 
-        result = log_interaction.invoke(
+        # -----------------------------
+        # CREATE NEW INTERACTION
+        # -----------------------------
+
+        if request.interaction_id is None:
+
+
+            result = log_interaction.invoke(
+                {
+                    "text": request.message
+                }
+            )
+
+
+            if isinstance(result, dict):
+                data = result
+
+            else:
+                data = json.loads(result)
+
+
+
+            if "error" in data:
+                return data
+
+
+
+            saved = create_interaction(
+                db,
+                data
+            )
+
+
+            return {
+
+                "message": "Interaction Saved Successfully",
+
+                "id": saved.id,
+
+                "data": data
+
+            }
+
+
+
+        # -----------------------------
+        # UPDATE EXISTING
+        # -----------------------------
+
+
+        existing = get_interaction(
+            db,
+            request.interaction_id
+        )
+
+
+        if existing is None:
+
+            return {
+                "error": "Interaction not found."
+            }
+
+
+
+        existing_data = {
+
+            "hcpName": existing.hcp_name,
+
+            "interactionType": existing.interaction_type,
+
+            "date": str(existing.interaction_date or ""),
+
+            "time": existing.interaction_time,
+
+            "attendees": existing.attendees,
+
+            "topicsDiscussed": existing.topics_discussed,
+
+            "productsDiscussed": existing.products_discussed,
+
+            "product": existing.product,
+
+            "materialsShared": existing.materials_shared,
+
+            "sentiment": existing.sentiment,
+
+            "summary": existing.summary,
+
+            "brochureShared": existing.brochure_shared,
+
+            "followUpRequired": existing.follow_up_required,
+
+            "followUpDate": str(existing.follow_up_date or ""),
+
+            "actionItems": existing.action_items,
+
+            "nextSteps": existing.next_steps,
+
+            "remarks": existing.remarks
+
+        }
+
+
+
+        prompt = f"""
+
+Existing Interaction:
+
+{json.dumps(existing_data,indent=2)}
+
+
+User Update:
+
+{request.message}
+
+"""
+
+
+        result = edit_interaction_ai.invoke(
             {
-                "text": request.message
+                "text": prompt
             }
         )
 
-        data = json.loads(result)
 
-        if "error" in data:
-            return data
 
-        saved = create_interaction(db, data)
+        if isinstance(result,dict):
+
+            updated_fields=result
+
+        else:
+
+            updated_fields=json.loads(result)
+
+
+
+        if "error" in updated_fields:
+
+            return updated_fields
+
+
+
+        update_interaction(
+            db,
+            request.interaction_id,
+            updated_fields
+        )
+
+
+
+        latest = get_interaction(
+            db,
+            request.interaction_id
+        )
+
 
         return {
-            "message": "Interaction Saved Successfully",
-            "id": saved.id,
-            "data": data
+
+            "message":"Interaction Updated Successfully",
+
+            "id":latest.id,
+
+            "data":{
+
+                "hcpName":latest.hcp_name,
+
+                "interactionType":latest.interaction_type,
+
+                "date":str(latest.interaction_date or ""),
+
+                "time":latest.interaction_time,
+
+                "attendees":latest.attendees,
+
+                "topicsDiscussed":latest.topics_discussed,
+
+                "productsDiscussed":latest.products_discussed,
+
+                "product":latest.product,
+
+                "materialsShared":latest.materials_shared,
+
+                "sentiment":latest.sentiment,
+
+                "summary":latest.summary,
+
+                "brochureShared":latest.brochure_shared,
+
+                "followUpRequired":latest.follow_up_required,
+
+                "followUpDate":str(latest.follow_up_date or ""),
+
+                "actionItems":latest.action_items,
+
+                "nextSteps":latest.next_steps,
+
+                "remarks":latest.remarks
+
+            }
+
         }
+
+
 
     except Exception as e:
 
+
         return {
-            "error": str(e)
+            "error":str(e)
         }
 
+
+
     finally:
+
         db.close()
 
 
-# ===============================
-# GET ALL
-# ===============================
+
+
+# =====================================
+# GET ALL INTERACTIONS
+# =====================================
 
 @app.get(
     "/interactions",
-    response_model=list[InteractionResponse],
-    tags=["Interactions"],
-    summary="Get All Interactions"
+    response_model=list[InteractionResponse]
 )
 def get_interactions():
 
-    db = SessionLocal()
+
+    db=SessionLocal()
 
     try:
 
-        interactions = get_all_interactions(db)
-
-        return interactions
+        return get_all_interactions(db)
 
     finally:
 
         db.close()
 
 
-# ===============================
-# GET BY ID
-# ===============================
+
+
+# =====================================
+# GET SINGLE
+# =====================================
 
 @app.get(
-    "/interaction/{interaction_id}",
-    response_model=InteractionResponse,
-    tags=["Interactions"],
-    summary="Get Interaction By ID"
+    "/interaction/{interaction_id}"
 )
-def get_one_interaction(interaction_id: int):
+def get_single_interaction(
+        interaction_id:int
+):
 
-    db = SessionLocal()
+
+    db=SessionLocal()
+
 
     try:
 
-        interaction = get_interaction(db, interaction_id)
+        interaction=get_interaction(
+            db,
+            interaction_id
+        )
+
 
         if interaction is None:
 
             return {
-                "message": "Interaction Not Found"
+                "error":"Interaction not found"
             }
 
+
         return interaction
+
+
 
     finally:
 
         db.close()
 
 
-# ===============================
-# UPDATE
-# ===============================
+
+
+# =====================================
+# MANUAL UPDATE
+# =====================================
 
 @app.put(
-    "/interaction/{interaction_id}",
-    tags=["Interactions"],
-    summary="Update Interaction"
+    "/interaction/{interaction_id}"
 )
-def edit_interaction(interaction_id: int, data: dict):
+def update_single_interaction(
+        interaction_id:int,
+        data:dict
+):
 
-    db = SessionLocal()
+
+    db=SessionLocal()
+
 
     try:
 
-        interaction = update_interaction(
+
+        updated=update_interaction(
             db,
             interaction_id,
             data
         )
 
-        if interaction is None:
+
+        if updated is None:
 
             return {
-                "message": "Interaction Not Found"
+                "error":"Interaction not found"
             }
 
+
         return {
-            "message": "Interaction Updated Successfully",
-            "data": interaction
+
+            "message":"Interaction Updated Successfully",
+
+            "data":updated
+
         }
+
+
 
     finally:
 
         db.close()
 
 
-# ===============================
+
+
+# =====================================
 # DELETE
-# ===============================
+# =====================================
 
 @app.delete(
-    "/interaction/{interaction_id}",
-    tags=["Interactions"],
-    summary="Delete Interaction"
+    "/interaction/{interaction_id}"
 )
-def remove_interaction(interaction_id: int):
+def delete_single_interaction(
+        interaction_id:int
+):
 
-    db = SessionLocal()
+
+    db=SessionLocal()
+
 
     try:
 
-        deleted = delete_interaction(
+
+        deleted=delete_interaction(
             db,
             interaction_id
         )
 
+
         if not deleted:
 
             return {
-                "message": "Interaction Not Found"
+                "error":"Interaction not found"
             }
 
+
+
         return {
-            "message": "Interaction Deleted Successfully"
+
+            "message":"Interaction Deleted Successfully"
+
         }
+
+
 
     finally:
 

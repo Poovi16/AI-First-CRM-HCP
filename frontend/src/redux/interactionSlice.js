@@ -1,41 +1,63 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  // HCP Details
+  // ==========================
+  // Basic Information
+  // ==========================
   hcpName: "",
-
-  // Interaction Details
   interactionType: "",
   date: "",
   time: "",
   attendees: "",
 
-  // Discussion Details
+  // ==========================
+  // Discussion
+  // ==========================
   topicsDiscussed: "",
   productsDiscussed: "",
   product: "",
-  materialsShared: "",
 
-  // AI Analysis
-  sentiment: "",
-  summary: "",
-
+  // ==========================
   // Materials
+  // ==========================
+  materialsShared: "",
+  samplesDistributed: "",
+
+  // ==========================
+  // Status
+  // ==========================
+  sentiment: "",
   brochureShared: false,
 
+  // ==========================
   // Follow-up
+  // ==========================
   followUpRequired: false,
   followUpDate: "",
 
-  // Extra Fields (Future Use)
+  // ==========================
+  // Outcomes
+  // ==========================
+  outcomes: "",
+
+  // ==========================
+  // Action Items
+  // ==========================
   actionItems: "",
-  nextSteps: "",
+
+  // ==========================
+  // Remarks
+  // ==========================
   remarks: "",
+
+  // ==========================
+  // AI Summary
+  // ==========================
+  summary: "",
 };
 
 const interactionSlice = createSlice({
   name: "interaction",
-
   initialState,
 
   reducers: {
@@ -50,9 +72,6 @@ const interactionSlice = createSlice({
   },
 });
 
-export const {
-  updateInteraction,
-  resetInteraction,
-} = interactionSlice.actions;
+export const { updateInteraction, resetInteraction } = interactionSlice.actions;
 
 export default interactionSlice.reducer;

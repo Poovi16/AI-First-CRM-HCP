@@ -33,7 +33,7 @@ def create_interaction(db: Session, data: dict):
 
         # Follow-up
         follow_up_required=data.get("followUpRequired", False),
-        follow_up_date=data.get("followUpDate"),
+        follow_up_date=data.get("followUpDate") or None,
 
         # CRM
         action_items=data.get("actionItems"),

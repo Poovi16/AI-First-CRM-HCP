@@ -1,211 +1,349 @@
 import { useState } from "react";
+
 import {
   Paper,
   Typography,
   Box,
   TextField,
   Button,
-  CircularProgress,
-  Divider,
+  Avatar,
+  Chip,
 } from "@mui/material";
 
+import SendIcon from "@mui/icons-material/Send";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+
 import { updateInteraction } from "../redux/interactionSlice";
 import { sendChat } from "../services/chatService";
 
+
 export default function ChatPanel() {
+
   const dispatch = useDispatch();
 
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const interaction = useSelector(
+    (state) => state.interaction
+  );
 
-  const [chatHistory, setChatHistory] = useState([
+
+  const [input, setInput] = useState("");
+
+  const [messages, setMessages] = useState([
     {
-      sender: "AI",
-      text: "Hello 👋 Tell me about your meeting with the doctor.",
+      role: "assistant",
+      content:
+        "Hi 👋 I am your AI Assistant. Tell me the interaction details.",
     },
   ]);
 
+  const [loading, setLoading] = useState(false);
+
+
+
   const handleSend = async () => {
-    if (!message.trim()) {
-      alert("Please enter a message.");
-      return;
-    }
 
-    const userMessage = message;
+    if (!input.trim()) return;
 
-    // User message
-    setChatHistory((prev) => [
+
+    const userMessage = {
+      role: "user",
+      content: input.trim(),
+    };
+
+
+    // Add user message once
+    setMessages((prev) => [
       ...prev,
-      {
-        sender: "You",
-        text: userMessage,
-      },
+      userMessage,
     ]);
 
+
+    setInput("");
     setLoading(true);
 
-    try {
-      const responseData = await sendChat(userMessage);
 
-      if (responseData.error) {
-        throw new Error(responseData.error);
+
+    try {
+
+      const response = await sendChat(
+        input.trim()
+      );
+
+
+      console.log(
+        "Backend Response:",
+        response
+      );
+
+
+      /*
+        Expected backend:
+
+        {
+          reply:"message",
+          interaction:{
+             doctor:"",
+             date:"",
+             ...
+          }
+        }
+
+      */
+
+
+      if(response?.data){
+
+        console.log("AI Extracted Data:", response.data);
+
+         dispatch(updateInteraction(response.data));
+
       }
 
-      dispatch(updateInteraction(responseData.data));
 
-      setChatHistory((prev) => [
+
+      const botReply =
+        response?.reply ||
+        response?.message ||
+        "Done 👍";
+
+
+      setMessages((prev)=>[
         ...prev,
         {
-          sender: "AI",
-          text: "✅ Interaction extracted and saved successfully.",
-        },
+          role:"assistant",
+          content:botReply
+        }
       ]);
 
-      setMessage("");
 
-    } catch (error) {
-      console.error(error);
 
-      setChatHistory((prev) => [
+    } catch(error){
+
+      console.error(
+        "Chat Error:",
+        error
+      );
+
+
+      setMessages((prev)=>[
         ...prev,
         {
-          sender: "AI",
-          text: "❌ Failed to connect to backend.",
-        },
+          role:"assistant",
+          content:
+          "❌ Failed to connect with backend"
+        }
       ]);
+
+
+    }
+    finally{
+
+      setLoading(false);
+
     }
 
-    setLoading(false);
   };
 
+
+
+
   return (
+
     <Paper
-      elevation={4}
+      elevation={3}
       sx={{
-        height: "500px",
-        borderRadius: 4,
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
+        height:"100%",
+        display:"flex",
+        flexDirection:"column",
+        p:2,
+        borderRadius:3
       }}
     >
+
+
       {/* Header */}
+
       <Box
-        sx={{
-          p: 2,
-          bgcolor: "#fff",
-        }}
+        display="flex"
+        alignItems="center"
+        gap={1}
+        mb={2}
       >
-        <Box display="flex" alignItems="center" gap={1}>
-          <SmartToyIcon color="primary" />
+
+        <Avatar>
+          <SmartToyIcon/>
+        </Avatar>
+
+
+        <Box>
+
           <Typography
             variant="h6"
             fontWeight="bold"
-            color="primary"
           >
             AI Assistant
           </Typography>
+
+
+          <Chip
+            label="LangGraph Agent"
+            size="small"
+            color="success"
+          />
+
         </Box>
 
-        <Typography
-          variant="body2"
-          color="text.secondary"
-        >
-          Log interaction details here via chat
-        </Typography>
+
       </Box>
 
-      <Divider />
 
-      {/* Chat */}
+
+
+
+      {/* Messages */}
+
       <Box
         sx={{
-          flex: 1,
-          overflowY: "auto",
-          p: 2,
-          bgcolor: "#fafafa",
+          flex:1,
+          overflowY:"auto",
+          mb:2
         }}
       >
-        {chatHistory.map((chat, index) => (
-          <Box
-            key={index}
-            mb={2}
-          >
-            <Typography
-              fontWeight="bold"
-              color={chat.sender === "AI" ? "primary" : "success.main"}
-            >
-              {chat.sender}
-            </Typography>
 
-            <Box
-              sx={{
-                mt: 0.5,
-                p: 1.5,
-                bgcolor:
-                  chat.sender === "AI"
-                    ? "#E3F2FD"
-                    : "#F5F5F5",
-                borderRadius: 2,
-              }}
-            >
-              <Typography whiteSpace="pre-line">
-                {chat.text}
-              </Typography>
-            </Box>
-          </Box>
-        ))}
+
+        {
+          messages.map(
+            (msg,index)=>(
+
+              <Box
+                key={index}
+                sx={{
+                  display:"flex",
+                  justifyContent:
+                  msg.role==="user"
+                  ?"flex-end"
+                  :"flex-start",
+                  mb:1
+                }}
+              >
+
+
+                <Box
+                  sx={{
+                    maxWidth:"75%",
+                    p:1.5,
+                    borderRadius:2,
+                    background:
+                    msg.role==="user"
+                    ?
+                    "#1976d2"
+                    :
+                    "#eeeeee",
+
+                    color:
+                    msg.role==="user"
+                    ?
+                    "white"
+                    :
+                    "black"
+                  }}
+                >
+
+                  {msg.content}
+
+                </Box>
+
+
+              </Box>
+
+            )
+          )
+        }
+
+
+
+        {
+          loading &&
+
+          <Typography
+            variant="caption"
+          >
+            AI is typing...
+          </Typography>
+
+        }
+
+
       </Box>
 
-      <Divider />
+
+
+
 
       {/* Input */}
+
       <Box
-        sx={{
-          p: 2,
-          bgcolor: "#fff",
-        }}
+        display="flex"
+        gap={1}
       >
+
         <TextField
-          multiline
-          rows={2}
+
           fullWidth
-          placeholder="Describe today's interaction..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleSend();
+
+          size="small"
+
+          placeholder="Type interaction details..."
+
+          value={input}
+
+          onChange={
+            (e)=>
+            setInput(e.target.value)
+          }
+
+
+          onKeyDown={
+            (e)=>{
+
+              if(
+                e.key==="Enter"
+              ){
+                handleSend();
+              }
+
             }
-          }}
+          }
+
         />
 
+
+
         <Button
-          fullWidth
+
           variant="contained"
-          sx={{
-            mt: 2,
-            py: 1.2,
-            borderRadius: 2,
-            fontWeight: "bold",
-          }}
+
+          endIcon={<SendIcon/>}
+
           onClick={handleSend}
+
           disabled={loading}
+
         >
-          {loading ? (
-            <CircularProgress
-              size={22}
-              color="inherit"
-            />
-          ) : (
-            "SEND"
-          )}
+
+          Send
+
         </Button>
+
+
       </Box>
+
+
+
     </Paper>
+
   );
+
 }
