@@ -68,7 +68,8 @@ export default function ChatPanel() {
     try {
 
       const response = await sendChat(
-        input.trim()
+        input.trim(),
+        interaction.id
       );
 
 
@@ -97,7 +98,10 @@ export default function ChatPanel() {
 
         console.log("AI Extracted Data:", response.data);
 
-         dispatch(updateInteraction(response.data));
+         dispatch(updateInteraction({
+           ...response.data,
+           id: response.id,
+         }));
 
       }
 
@@ -197,7 +201,6 @@ export default function ChatPanel() {
 
 
       </Box>
-
 
 
 

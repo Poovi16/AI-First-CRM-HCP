@@ -2,6 +2,11 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   // ==========================
+  // Interaction ID (needed to update the correct saved record)
+  // ==========================
+  id: null,
+
+  // ==========================
   // Basic Information
   // ==========================
   hcpName: "",
