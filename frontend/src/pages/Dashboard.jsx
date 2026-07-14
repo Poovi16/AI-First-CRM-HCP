@@ -13,26 +13,28 @@ import PsychologyIcon from "@mui/icons-material/Psychology";
 import InteractionForm from "../components/InteractionForm";
 import ChatPanel from "../components/ChatPanel";
 import InteractionHistory from "../components/InteractionHistory";
+import { tokens } from "../theme/tokens";
 
 export default function Dashboard() {
   return (
     <Box
       sx={{
         minHeight: "100vh",
-        bgcolor: "#F6F8FC",
+        bgcolor: tokens.paper,
         py: 5,
       }}
     >
       <Container maxWidth={false} sx={{ px: { xs: 2, md: 5 } }}>
-        {/* Enterprise Header */}
+        {/* Header */}
         <Box
           sx={{
-            background: "#fff",
-            borderRadius: 4,
+            background: tokens.card,
+            borderRadius: "14px",
             p: 3,
             mb: 4,
-            boxShadow: "0 8px 30px rgba(15,23,42,0.08)",
-            border: "1px solid #E2E8F0",
+            boxShadow:
+              "0 1px 2px rgba(22,35,43,0.04), 0 8px 24px -12px rgba(22,35,43,0.12)",
+            border: `1px solid ${tokens.line}`,
           }}
         >
           <Stack
@@ -44,22 +46,21 @@ export default function Dashboard() {
             <Box>
               <Typography
                 sx={{
-                  fontSize: {
-                    xs: "1.8rem",
-                    md: "2.2rem",
-                  },
-                  fontWeight: 700,
-                  color: "#1E293B",
-                  letterSpacing: "-0.02em",
+                  fontFamily: tokens.displayFont,
+                  fontWeight: 600,
+                  fontSize: { xs: "1.8rem", md: "2.15rem" },
+                  color: tokens.ink,
+                  letterSpacing: "-0.01em",
                 }}
               >
-                Log HCP Interaction
+                Log HCP interaction
               </Typography>
 
               <Typography
                 sx={{
-                  color: "#64748B",
+                  color: tokens.inkSoft,
                   mt: 1,
+                  fontSize: "0.95rem",
                 }}
               >
                 Capture and manage healthcare professional interactions using
@@ -69,26 +70,39 @@ export default function Dashboard() {
 
             <Stack direction="row" spacing={1.5} flexWrap="wrap">
               <Chip
-                icon={<PsychologyIcon />}
-                label="AI Powered"
+                icon={
+                  <PsychologyIcon
+                    sx={{ color: `${tokens.tealDeep} !important` }}
+                  />
+                }
+                label="AI powered"
                 sx={{
-                  bgcolor: "#DBEAFE",
-                  color: "#1D4ED8",
+                  bgcolor: tokens.tealWash,
+                  color: tokens.tealDeep,
                   fontWeight: 600,
+                  border: `1px solid ${tokens.line}`,
                 }}
               />
 
               <Chip
-                icon={<CheckCircleIcon />}
-                label="Ready to Save"
-                color="success"
-                variant="filled"
+                icon={
+                  <CheckCircleIcon
+                    sx={{ color: `${tokens.amberInk} !important` }}
+                  />
+                }
+                label="Ready to save"
+                sx={{
+                  bgcolor: tokens.amberWash,
+                  color: tokens.amberInk,
+                  fontWeight: 600,
+                  border: "1px solid #EEDBB0",
+                }}
               />
             </Stack>
           </Stack>
         </Box>
 
-        {/* Main Layout */}
+        {/* Main layout */}
         <Box
           sx={{
             display: "grid",
@@ -100,36 +114,34 @@ export default function Dashboard() {
             alignItems: "start",
           }}
         >
-          {/* Left Side */}
-          <Box
-            sx={{
-              borderRadius: 4,
-            }}
-          >
+          <Box>
             <InteractionForm />
           </Box>
 
-          {/* Right Side */}
           <Box
             sx={{
-              position: {
-                xs: "static",
-                lg: "sticky",
-              },
+              position: { xs: "static", lg: "sticky" },
               top: 24,
-              borderRadius: 4,
             }}
           >
             <ChatPanel />
           </Box>
         </Box>
 
-        <Divider sx={{ my: 5 }} />
+        <Divider sx={{ my: 5, borderColor: tokens.line }} />
 
         {/* History */}
         <Box>
-          <Typography variant="h5" fontWeight={700} mb={2} color="#1E293B">
-            Interaction History
+          <Typography
+            sx={{
+              fontFamily: tokens.displayFont,
+              fontWeight: 600,
+              fontSize: "1.4rem",
+              color: tokens.ink,
+              mb: 2,
+            }}
+          >
+            Interaction history
           </Typography>
 
           <InteractionHistory />

@@ -32,6 +32,42 @@ import SmartToyIcon from "@mui/icons-material/SmartToy";
 import PsychologyIcon from "@mui/icons-material/Psychology";
 
 import { useSelector } from "react-redux";
+import { tokens } from "../theme/tokens";
+
+// Small numbered eyebrow — sections here are a genuine review
+// sequence (basic info -> discussion -> ... -> AI summary), so the
+// numbering encodes real order, not decoration.
+function SectionLabel({ number, icon, title }) {
+  return (
+    <Stack direction="row" spacing={1.25} alignItems="center" mb={3}>
+      <Box
+        sx={{
+          fontFamily: tokens.monoFont,
+          fontSize: "11px",
+          fontWeight: 500,
+          color: tokens.tealDeep,
+          bgcolor: tokens.tealWash,
+          px: 1,
+          py: 0.3,
+          borderRadius: "4px",
+          letterSpacing: "0.03em",
+        }}
+      >
+        {number}
+      </Box>
+      {icon}
+      <Typography
+        sx={{
+          fontSize: "1.05rem",
+          fontWeight: 700,
+          color: tokens.ink,
+        }}
+      >
+        {title}
+      </Typography>
+    </Stack>
+  );
+}
 
 export default function InteractionForm() {
   const interaction = useSelector((state) => state.interaction);
@@ -48,25 +84,30 @@ export default function InteractionForm() {
 
   const fieldStyle = {
     "& .MuiOutlinedInput-root": {
-      borderRadius: "16px",
-      background: "#fff",
-      minHeight: 60,
+      borderRadius: "8px",
+      background: tokens.paper,
+      minHeight: 56,
 
       "& fieldset": {
-        borderColor: "#D9E2EC",
+        borderColor: tokens.line,
       },
 
       "&:hover fieldset": {
-        borderColor: "#2563EB",
+        borderColor: tokens.teal,
       },
 
       "&.Mui-focused fieldset": {
-        borderColor: "#2563EB",
+        borderColor: tokens.teal,
       },
     },
 
     "& .MuiInputLabel-root": {
       fontWeight: 500,
+      color: tokens.inkSoft,
+    },
+
+    "& .MuiInputLabel-root.Mui-focused": {
+      color: tokens.tealDeep,
     },
   };
 
@@ -75,32 +116,35 @@ export default function InteractionForm() {
       elevation={0}
       sx={{
         p: 4,
-        borderRadius: "24px",
-        bgcolor: "#fff",
-        border: "1px solid #E2E8F0",
-        boxShadow: "0 12px 40px rgba(15,23,42,.10)",
+        borderRadius: "14px",
+        bgcolor: tokens.card,
+        border: `1px solid ${tokens.line}`,
+        boxShadow:
+          "0 1px 2px rgba(22,35,43,0.04), 0 8px 24px -12px rgba(22,35,43,0.12)",
       }}
     >
       {/* ================= Header ================= */}
 
       <Typography
         sx={{
+          fontFamily: tokens.displayFont,
           fontSize: "1.3rem",
-          fontWeight: 700,
-          color: "#0F172A",
+          fontWeight: 600,
+          color: tokens.ink,
         }}
       >
-        Interaction Details
+        Interaction details
       </Typography>
 
       <Typography
         sx={{
-          color: "#64748B",
+          color: tokens.inkSoft,
           mt: 1,
           mb: 3,
+          fontSize: "0.9rem",
         }}
       >
-        AI extracted information from your conversation.
+        Reviewed and structured from your recorded conversation.
       </Typography>
 
       <Box
@@ -115,20 +159,39 @@ export default function InteractionForm() {
       >
         <Stack direction="row" spacing={1} flexWrap="wrap">
           <Chip
-            icon={interaction.hcpName ? <CheckCircle /> : <HourglassEmpty />}
+            icon={
+              interaction.hcpName ? (
+                <CheckCircle sx={{ color: `${tokens.tealDeep} !important` }} />
+              ) : (
+                <HourglassEmpty
+                  sx={{ color: `${tokens.inkFaint} !important` }}
+                />
+              )
+            }
             label={
               interaction.hcpName
-                ? "AI Extraction Complete"
-                : "Waiting for Conversation"
+                ? "AI extraction complete"
+                : "Waiting for conversation"
             }
-            color={interaction.hcpName ? "success" : "default"}
+            sx={{
+              bgcolor: interaction.hcpName ? tokens.tealWash : "#EEF1F0",
+              color: interaction.hcpName ? tokens.tealDeep : tokens.inkSoft,
+              fontWeight: 600,
+              border: `1px solid ${interaction.hcpName ? tokens.line : "#E4E8E7"}`,
+            }}
           />
 
           <Chip
-            icon={<PsychologyIcon />}
-            label="AI Confidence 96%"
-            color="primary"
-            variant="outlined"
+            icon={
+              <PsychologyIcon sx={{ color: `${tokens.amberInk} !important` }} />
+            }
+            label="Extracted by AI"
+            sx={{
+              bgcolor: tokens.amberWash,
+              color: tokens.amberInk,
+              fontWeight: 600,
+              border: "1px solid #EEDBB0",
+            }}
           />
         </Stack>
 
@@ -137,26 +200,32 @@ export default function InteractionForm() {
           startIcon={<Save />}
           onClick={handleSave}
           sx={{
-            borderRadius: "14px",
+            borderRadius: "8px",
             px: 3,
             py: 1.2,
-            fontWeight: 700,
+            fontWeight: 600,
             textTransform: "none",
-            boxShadow: "0 8px 20px rgba(37,99,235,.25)",
+            bgcolor: tokens.tealDeep,
+            boxShadow: "none",
+            "&:hover": { bgcolor: "#083F36", boxShadow: "none" },
           }}
         >
-          Save Interaction
+          Save interaction
         </Button>
       </Box>
 
-      <Divider sx={{ mb: 4 }} />
+      <Divider sx={{ mb: 4, borderColor: tokens.line }} />
 
       <Stack spacing={4}>
         {saved && (
           <Alert
             severity="success"
             sx={{
-              borderRadius: "12px",
+              borderRadius: "8px",
+              bgcolor: tokens.tealWash,
+              color: tokens.tealDeep,
+              border: `1px solid ${tokens.line}`,
+              "& .MuiAlert-icon": { color: tokens.tealDeep },
             }}
           >
             Interaction saved successfully to CRM.
@@ -166,23 +235,15 @@ export default function InteractionForm() {
         {/* ================= Basic Information ================= */}
 
         <Box>
-          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
-            <PersonIcon color="primary" />
-
-            <Typography
-              sx={{
-                fontSize: "1.2rem",
-                fontWeight: 700,
-                color: "#0F172A",
-              }}
-            >
-              Basic Information
-            </Typography>
-          </Stack>
+          <SectionLabel
+            number="01"
+            icon={<PersonIcon sx={{ color: tokens.teal, fontSize: 20 }} />}
+            title="Basic information"
+          />
 
           <Stack spacing={3}>
             <TextField
-              label="HCP Name"
+              label="HCP name"
               value={interaction.hcpName || ""}
               InputProps={{ readOnly: true }}
               fullWidth
@@ -192,7 +253,7 @@ export default function InteractionForm() {
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
                 <TextField
-                  label="Interaction Type"
+                  label="Interaction type"
                   value={interaction.interactionType || ""}
                   InputProps={{ readOnly: true }}
                   fullWidth
@@ -233,28 +294,20 @@ export default function InteractionForm() {
           </Stack>
         </Box>
 
-        <Divider />
+        <Divider sx={{ borderColor: tokens.line }} />
 
         {/* ================= Discussion ================= */}
 
         <Box>
-          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
-            <ForumIcon color="primary" />
-
-            <Typography
-              sx={{
-                fontSize: "1.2rem",
-                fontWeight: 700,
-                color: "#0F172A",
-              }}
-            >
-              Discussion
-            </Typography>
-          </Stack>
+          <SectionLabel
+            number="02"
+            icon={<ForumIcon sx={{ color: tokens.teal, fontSize: 20 }} />}
+            title="Discussion"
+          />
 
           <Stack spacing={3}>
             <TextField
-              label="Topics Discussed"
+              label="Topics discussed"
               value={interaction.topicsDiscussed || ""}
               multiline
               rows={4}
@@ -264,7 +317,7 @@ export default function InteractionForm() {
             />
 
             <TextField
-              label="Products Discussed"
+              label="Products discussed"
               value={interaction.productsDiscussed || ""}
               InputProps={{ readOnly: true }}
               fullWidth
@@ -272,7 +325,7 @@ export default function InteractionForm() {
             />
 
             <TextField
-              label="Primary Product"
+              label="Primary product"
               value={interaction.product || ""}
               InputProps={{ readOnly: true }}
               fullWidth
@@ -281,29 +334,21 @@ export default function InteractionForm() {
           </Stack>
         </Box>
 
-        <Divider />
+        <Divider sx={{ borderColor: tokens.line }} />
 
         {/* ================= Materials ================= */}
 
         <Box>
-          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
-            <Inventory2Icon color="primary" />
-
-            <Typography
-              sx={{
-                fontSize: "1.2rem",
-                fontWeight: 700,
-                color: "#0F172A",
-              }}
-            >
-              Materials
-            </Typography>
-          </Stack>
+          <SectionLabel
+            number="03"
+            icon={<Inventory2Icon sx={{ color: tokens.teal, fontSize: 20 }} />}
+            title="Materials"
+          />
 
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField
-                label="Materials Shared"
+                label="Materials shared"
                 value={interaction.materialsShared || ""}
                 InputProps={{ readOnly: true }}
                 fullWidth
@@ -313,7 +358,7 @@ export default function InteractionForm() {
 
             <Grid item xs={12} md={6}>
               <TextField
-                label="Samples Distributed"
+                label="Samples distributed"
                 value={interaction.samplesDistributed || ""}
                 InputProps={{ readOnly: true }}
                 fullWidth
@@ -323,24 +368,16 @@ export default function InteractionForm() {
           </Grid>
         </Box>
 
-        <Divider />
+        <Divider sx={{ borderColor: tokens.line }} />
 
         {/* ================= Status ================= */}
 
         <Box>
-          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
-            <FlagIcon color="primary" />
-
-            <Typography
-              sx={{
-                fontSize: "1.2rem",
-                fontWeight: 700,
-                color: "#0F172A",
-              }}
-            >
-              Status
-            </Typography>
-          </Stack>
+          <SectionLabel
+            number="04"
+            icon={<FlagIcon sx={{ color: tokens.teal, fontSize: 20 }} />}
+            title="Status"
+          />
 
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
@@ -349,9 +386,13 @@ export default function InteractionForm() {
                   <Checkbox
                     checked={interaction.brochureShared || false}
                     disabled
+                    sx={{
+                      color: tokens.line,
+                      "&.Mui-checked": { color: tokens.teal },
+                    }}
                   />
                 }
-                label="Brochure Shared"
+                label="Brochure shared"
               />
             </Grid>
 
@@ -360,30 +401,55 @@ export default function InteractionForm() {
                 <FormLabel
                   sx={{
                     fontWeight: 600,
-                    color: "#475569",
+                    color: tokens.inkSoft,
                     mb: 1,
                     display: "block",
+                    fontSize: "0.85rem",
                   }}
                 >
-                  HCP Sentiment
+                  HCP sentiment
                 </FormLabel>
 
                 <RadioGroup row value={interaction.sentiment || ""}>
                   <FormControlLabel
                     value="Positive"
-                    control={<Radio disabled />}
+                    control={
+                      <Radio
+                        disabled
+                        sx={{
+                          color: tokens.line,
+                          "&.Mui-checked": { color: tokens.teal },
+                        }}
+                      />
+                    }
                     label="😊 Positive"
                   />
 
                   <FormControlLabel
                     value="Neutral"
-                    control={<Radio disabled />}
+                    control={
+                      <Radio
+                        disabled
+                        sx={{
+                          color: tokens.line,
+                          "&.Mui-checked": { color: tokens.teal },
+                        }}
+                      />
+                    }
                     label="😐 Neutral"
                   />
 
                   <FormControlLabel
                     value="Negative"
-                    control={<Radio disabled />}
+                    control={
+                      <Radio
+                        disabled
+                        sx={{
+                          color: tokens.line,
+                          "&.Mui-checked": { color: tokens.teal },
+                        }}
+                      />
+                    }
                     label="☹️ Negative"
                   />
                 </RadioGroup>
@@ -392,24 +458,16 @@ export default function InteractionForm() {
           </Grid>
         </Box>
 
-        <Divider />
+        <Divider sx={{ borderColor: tokens.line }} />
 
         {/* ================= Follow-up ================= */}
 
         <Box>
-          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
-            <EventIcon color="primary" />
-
-            <Typography
-              sx={{
-                fontSize: "1.2rem",
-                fontWeight: 700,
-                color: "#0F172A",
-              }}
-            >
-              Follow-up
-            </Typography>
-          </Stack>
+          <SectionLabel
+            number="05"
+            icon={<EventIcon sx={{ color: tokens.teal, fontSize: 20 }} />}
+            title="Follow-up"
+          />
 
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
@@ -418,15 +476,19 @@ export default function InteractionForm() {
                   <Checkbox
                     checked={interaction.followUpRequired || false}
                     disabled
+                    sx={{
+                      color: tokens.line,
+                      "&.Mui-checked": { color: tokens.teal },
+                    }}
                   />
                 }
-                label="Follow-up Required"
+                label="Follow-up required"
               />
             </Grid>
 
             <Grid item xs={12} md={6}>
               <TextField
-                label="Follow-up Date"
+                label="Follow-up date"
                 value={interaction.followUpDate || ""}
                 InputProps={{ readOnly: true }}
                 fullWidth
@@ -436,24 +498,16 @@ export default function InteractionForm() {
           </Grid>
         </Box>
 
-        <Divider />
+        <Divider sx={{ borderColor: tokens.line }} />
 
         {/* ================= Outcomes ================= */}
 
         <Box>
-          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
-            <InsightsIcon color="primary" />
-
-            <Typography
-              sx={{
-                fontSize: "1.2rem",
-                fontWeight: 700,
-                color: "#0F172A",
-              }}
-            >
-              Outcomes
-            </Typography>
-          </Stack>
+          <SectionLabel
+            number="06"
+            icon={<InsightsIcon sx={{ color: tokens.teal, fontSize: 20 }} />}
+            title="Outcomes"
+          />
 
           <TextField
             label="Outcomes"
@@ -466,27 +520,19 @@ export default function InteractionForm() {
           />
         </Box>
 
-        <Divider />
+        <Divider sx={{ borderColor: tokens.line }} />
 
         {/* ================= Action Items ================= */}
 
         <Box>
-          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
-            <TaskAltIcon color="primary" />
-
-            <Typography
-              sx={{
-                fontSize: "1.2rem",
-                fontWeight: 700,
-                color: "#0F172A",
-              }}
-            >
-              Action Items
-            </Typography>
-          </Stack>
+          <SectionLabel
+            number="07"
+            icon={<TaskAltIcon sx={{ color: tokens.teal, fontSize: 20 }} />}
+            title="Action items"
+          />
 
           <TextField
-            label="Action Items"
+            label="Action items"
             value={interaction.actionItems || ""}
             multiline
             rows={4}
@@ -496,24 +542,16 @@ export default function InteractionForm() {
           />
         </Box>
 
-        <Divider />
+        <Divider sx={{ borderColor: tokens.line }} />
 
         {/* ================= Remarks ================= */}
 
         <Box>
-          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
-            <NotesIcon color="primary" />
-
-            <Typography
-              sx={{
-                fontSize: "1.2rem",
-                fontWeight: 700,
-                color: "#0F172A",
-              }}
-            >
-              Remarks
-            </Typography>
-          </Stack>
+          <SectionLabel
+            number="08"
+            icon={<NotesIcon sx={{ color: tokens.teal, fontSize: 20 }} />}
+            title="Remarks"
+          />
 
           <TextField
             label="Remarks"
@@ -526,32 +564,41 @@ export default function InteractionForm() {
           />
         </Box>
 
-        <Divider />
+        <Divider sx={{ borderColor: tokens.line }} />
 
         {/* ================= AI Summary ================= */}
 
         <Box
           sx={{
             p: 3,
-            borderRadius: "20px",
-            bgcolor: "#F8FAFF",
-            border: "1px solid #DBEAFE",
+            borderRadius: "10px",
+            bgcolor: tokens.amberWash,
+            border: "1px solid #EEDBB0",
           }}
         >
           <Stack direction="row" spacing={1} alignItems="center" mb={3}>
-            <SmartToyIcon color="primary" />
+            <SmartToyIcon sx={{ color: tokens.amberInk, fontSize: 20 }} />
 
             <Typography
               sx={{
-                fontSize: "1.2rem",
+                fontSize: "1.05rem",
                 fontWeight: 700,
-                color: "#0F172A",
+                color: tokens.ink,
               }}
             >
-              AI Generated Summary
+              AI generated summary
             </Typography>
 
-            <Chip label="AI" color="primary" size="small" sx={{ ml: "auto" }} />
+            <Chip
+              label="AI"
+              size="small"
+              sx={{
+                ml: "auto",
+                bgcolor: tokens.amber,
+                color: "#fff",
+                fontWeight: 700,
+              }}
+            />
           </Stack>
 
           <TextField
@@ -561,7 +608,13 @@ export default function InteractionForm() {
             rows={6}
             InputProps={{ readOnly: true }}
             fullWidth
-            sx={fieldStyle}
+            sx={{
+              ...fieldStyle,
+              "& .MuiOutlinedInput-root": {
+                ...fieldStyle["& .MuiOutlinedInput-root"],
+                background: "#fff",
+              },
+            }}
           />
         </Box>
       </Stack>

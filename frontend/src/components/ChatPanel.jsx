@@ -20,30 +20,16 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { updateInteraction, resetInteraction } from "../redux/interactionSlice";
 import { sendChat } from "../services/chatService";
-
-// =====================================================
-// Design tokens
-// =====================================================
-
-const tokens = {
-  ink: "#0B1220", // primary text / user bubble
-  inkSoft: "#4B5565", // secondary text
-  canvas: "#F7F8FA", // messages area wash
-  surface: "#FFFFFF", // panel surface
-  line: "#E8EBF0", // hairline borders
-  accent: "#0F6E5C", // clinical teal - brand accent
-  accentSoft: "#EAF4F1", // tinted assistant bubble
-  accentDeep: "#0C5A4A", // hover / pressed
-};
+import { tokens, entityColors } from "../theme/tokens";
 
 const pulse = keyframes`
-  0%   { box-shadow: 0 0 0 0 rgba(15, 110, 92, 0.45); }
-  70%  { box-shadow: 0 0 0 6px rgba(15, 110, 92, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(15, 110, 92, 0); }
+  0%   { box-shadow: 0 0 0 0 rgba(79, 209, 179, 0.45); }
+  70%  { box-shadow: 0 0 0 6px rgba(79, 209, 179, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(79, 209, 179, 0); }
 `;
 
 const bounce = keyframes`
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
   30% { transform: translateY(-4px); opacity: 1; }
 `;
 
@@ -57,7 +43,7 @@ function TypingDots() {
             width: 6,
             height: 6,
             borderRadius: "50%",
-            bgcolor: tokens.accent,
+            bgcolor: "#5E7377",
             animation: `${bounce} 1.1s ease-in-out infinite`,
             animationDelay: `${i * 0.15}s`,
           }}
@@ -76,9 +62,110 @@ function formatTime() {
 
 const WELCOME_MESSAGE = {
   role: "assistant",
-  content: "Hi 👋 I am your AI Assistant. Tell me the interaction details.",
+  content: "Hi — tell me about the interaction and I'll structure it for you.",
   time: formatTime(),
 };
+
+// =====================================================
+// Entity highlighting — pulls known values straight out of
+// the current interaction state, so tags always match what
+// actually landed in the form on the left, not a static list.
+// =====================================================
+
+function buildEntities(interaction) {
+  const entities = [];
+
+  const push = (value, type, label) => {
+    const v = (value || "").trim();
+    if (v.length > 1) entities.push({ value: v, type, label });
+  };
+
+  push(interaction.hcpName, "hcp", "HCP");
+  push(interaction.product, "product", "Product");
+
+  (interaction.productsDiscussed || "")
+    .split(",")
+    .forEach((v) => push(v, "product", "Product"));
+
+  (interaction.topicsDiscussed || "")
+    .split(",")
+    .forEach((v) => push(v, "topic", "Topic"));
+
+  (interaction.materialsShared || "")
+    .split(",")
+    .forEach((v) => push(v, "material", "Material"));
+
+  // Longest first so "GlucoBalance 10" wins over a shorter partial match
+  const seen = new Set();
+  return entities
+    .filter((e) => {
+      const key = e.value.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((a, b) => b.value.length - a.value.length);
+}
+
+function EntityTag({ text, type, label }) {
+  const c = entityColors[type];
+  return (
+    <Box
+      component="span"
+      sx={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "5px",
+        padding: "1px 4px 1px 2px",
+        borderRadius: "4px",
+        fontWeight: 600,
+        bgcolor: c.bg,
+        color: c.ink,
+      }}
+    >
+      {text}
+      <Box
+        component="span"
+        sx={{
+          fontFamily: tokens.monoFont,
+          fontSize: "8px",
+          fontWeight: 600,
+          letterSpacing: "0.03em",
+          padding: "2px 5px",
+          borderRadius: "3px",
+          bgcolor: c.label,
+          color: "#12191D",
+          textTransform: "uppercase",
+          transform: "translateY(-1px)",
+        }}
+      >
+        {label}
+      </Box>
+    </Box>
+  );
+}
+
+function renderHighlighted(text, entities) {
+  if (!entities.length) return text;
+
+  const escaped = entities.map((e) =>
+    e.value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+  );
+  const pattern = new RegExp(`(${escaped.join("|")})`, "gi");
+  const parts = text.split(pattern);
+
+  return parts.map((part, i) => {
+    const match = entities.find(
+      (e) => e.value.toLowerCase() === part.toLowerCase(),
+    );
+    if (match) {
+      return (
+        <EntityTag key={i} text={part} type={match.type} label={match.label} />
+      );
+    }
+    return part;
+  });
+}
 
 export default function ChatPanel() {
   const dispatch = useDispatch();
@@ -97,6 +184,8 @@ export default function ChatPanel() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  const entities = buildEntities(interaction);
+
   // =====================================================
   // Start a fresh interaction (clears Redux id + chat)
   // =====================================================
@@ -107,7 +196,7 @@ export default function ChatPanel() {
       {
         role: "assistant",
         content:
-          "Hi 👋 I am your AI Assistant. Tell me the interaction details.",
+          "Hi — tell me about the interaction and I'll structure it for you.",
         time: formatTime(),
       },
     ]);
@@ -144,7 +233,7 @@ export default function ChatPanel() {
           {
             role: "assistant",
             content:
-              "⚠️ That interaction no longer exists, so I've started a new one. Please resend your message.",
+              "That interaction no longer exists, so I've started a new one. Please resend your message.",
             time: formatTime(),
           },
         ]);
@@ -163,7 +252,7 @@ export default function ChatPanel() {
         );
       }
 
-      const botReply = response?.reply || response?.message || "Done 👍";
+      const botReply = response?.reply || response?.message || "Done.";
 
       setMessages((prev) => [
         ...prev,
@@ -180,7 +269,7 @@ export default function ChatPanel() {
         ...prev,
         {
           role: "assistant",
-          content: "❌ Failed to connect with backend",
+          content: "Failed to connect with backend.",
           time: formatTime(),
         },
       ]);
@@ -197,11 +286,11 @@ export default function ChatPanel() {
         maxHeight: 500,
         display: "flex",
         flexDirection: "column",
-        borderRadius: 4,
-        border: `1px solid ${tokens.line}`,
+        borderRadius: "14px",
         overflow: "hidden",
-        fontFamily: "'Inter', sans-serif",
-        bgcolor: tokens.surface,
+        fontFamily: tokens.bodyFont,
+        bgcolor: tokens.panel,
+        color: "#EAF1EF",
       }}
     >
       {/* Header */}
@@ -213,33 +302,32 @@ export default function ChatPanel() {
           gap: 1.5,
           px: 2.5,
           py: 2,
-          borderBottom: `1px solid ${tokens.line}`,
+          borderBottom: `1px solid ${tokens.panelLine}`,
           flexShrink: 0,
         }}
       >
         <Avatar
           sx={{
-            bgcolor: tokens.accentSoft,
-            color: tokens.accent,
-            width: 40,
-            height: 40,
+            background: `linear-gradient(135deg, ${tokens.teal}, ${tokens.tealDeep})`,
+            width: 34,
+            height: 34,
           }}
         >
-          <AutoAwesomeRoundedIcon fontSize="small" />
+          <AutoAwesomeRoundedIcon fontSize="small" sx={{ color: "#fff" }} />
         </Avatar>
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
             sx={{
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: tokens.bodyFont,
               fontWeight: 600,
               fontSize: "0.95rem",
-              color: tokens.ink,
+              color: "#fff",
               letterSpacing: "-0.01em",
               lineHeight: 1.3,
             }}
           >
-            AI Assistant
+            AI assistant
           </Typography>
 
           <Box
@@ -250,36 +338,75 @@ export default function ChatPanel() {
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
-                bgcolor: tokens.accent,
+                bgcolor: "#4FD1B3",
                 animation: `${pulse} 2s infinite`,
               }}
             />
             <Typography
               sx={{
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: tokens.bodyFont,
                 fontSize: "0.72rem",
-                color: tokens.inkSoft,
+                color: tokens.panelSoft,
                 fontWeight: 500,
               }}
             >
-              Active · LangGraph Agent
+              Active · LangGraph agent
             </Typography>
           </Box>
         </Box>
 
-        <Tooltip title="Start New Interaction">
+        <Tooltip title="Start new interaction">
           <IconButton
             onClick={handleNewInteraction}
             sx={{
-              color: tokens.accent,
+              color: tokens.panelSoft,
               "&:hover": {
-                bgcolor: tokens.accentSoft,
+                bgcolor: tokens.panelLine,
+                color: "#fff",
               },
             }}
           >
             <AddCommentRoundedIcon fontSize="small" />
           </IconButton>
         </Tooltip>
+      </Box>
+
+      {/* Entity legend */}
+
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "8px 12px",
+          px: 2.5,
+          py: 1.25,
+          borderBottom: `1px solid ${tokens.panelLine}`,
+        }}
+      >
+        {Object.entries(entityColors).map(([key, c]) => (
+          <Box
+            key={key}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              fontSize: "10.5px",
+              color: "#7C8F92",
+              fontWeight: 500,
+              textTransform: "capitalize",
+            }}
+          >
+            <Box
+              sx={{
+                width: 7,
+                height: 7,
+                borderRadius: "2px",
+                bgcolor: c.label,
+              }}
+            />
+            {key}
+          </Box>
+        ))}
       </Box>
 
       {/* Messages */}
@@ -291,10 +418,10 @@ export default function ChatPanel() {
           minHeight: 0,
           px: 2.5,
           py: 2,
-          bgcolor: tokens.canvas,
+          bgcolor: tokens.panelCanvas,
           "&::-webkit-scrollbar": { width: 6 },
           "&::-webkit-scrollbar-thumb": {
-            bgcolor: "#D7DCE3",
+            bgcolor: tokens.panelLine,
             borderRadius: 8,
           },
         }}
@@ -314,28 +441,30 @@ export default function ChatPanel() {
             >
               <Box
                 sx={{
-                  maxWidth: "80%",
+                  maxWidth: "88%",
                   px: 1.75,
                   py: 1.25,
-                  fontFamily: "'Inter', sans-serif",
+                  fontFamily: tokens.bodyFont,
                   fontSize: "0.875rem",
-                  lineHeight: 1.5,
-                  color: isUser ? "#FFFFFF" : tokens.ink,
-                  bgcolor: isUser ? tokens.ink : tokens.accentSoft,
-                  border: isUser ? "none" : `1px solid #DCEAE6`,
+                  lineHeight: 1.65,
+                  color: "#EAF1EF",
+                  bgcolor: isUser ? tokens.panelBubble : "#1B262A",
+                  border: `1px solid ${isUser ? tokens.panelBubbleLine : tokens.panelLine}`,
                   borderRadius: isUser
-                    ? "16px 16px 4px 16px"
-                    : "16px 16px 16px 4px",
+                    ? "12px 12px 4px 12px"
+                    : "12px 12px 12px 4px",
                 }}
               >
-                {msg.content}
+                {isUser
+                  ? renderHighlighted(msg.content, entities)
+                  : msg.content}
               </Box>
 
               <Typography
                 sx={{
-                  fontFamily: "'Inter', sans-serif",
-                  fontSize: "0.68rem",
-                  color: "#9AA3AF",
+                  fontFamily: tokens.monoFont,
+                  fontSize: "0.62rem",
+                  color: "#5E7377",
                   mt: 0.5,
                   px: 0.5,
                 }}
@@ -350,9 +479,9 @@ export default function ChatPanel() {
           <Box
             sx={{
               display: "inline-flex",
-              bgcolor: tokens.accentSoft,
-              border: "1px solid #DCEAE6",
-              borderRadius: "16px 16px 16px 4px",
+              bgcolor: "#1B262A",
+              border: `1px solid ${tokens.panelLine}`,
+              borderRadius: "12px 12px 12px 4px",
               mb: 1,
             }}
           >
@@ -372,8 +501,8 @@ export default function ChatPanel() {
           gap: 1,
           px: 2,
           py: 2,
-          borderTop: `1px solid ${tokens.line}`,
-          bgcolor: tokens.surface,
+          borderTop: `1px solid ${tokens.panelLine}`,
+          bgcolor: tokens.panel,
           flexShrink: 0,
         }}
       >
@@ -391,19 +520,24 @@ export default function ChatPanel() {
           sx={{
             "& .MuiOutlinedInput-root": {
               borderRadius: "999px",
-              bgcolor: tokens.canvas,
-              fontFamily: "'Inter', sans-serif",
+              bgcolor: "#1B262A",
+              color: "#EAF1EF",
+              fontFamily: tokens.bodyFont,
               fontSize: "0.875rem",
               "& fieldset": {
-                borderColor: tokens.line,
+                borderColor: tokens.panelLine,
               },
               "&:hover fieldset": {
-                borderColor: tokens.accent,
+                borderColor: tokens.teal,
               },
               "&.Mui-focused fieldset": {
-                borderColor: tokens.accent,
+                borderColor: tokens.teal,
                 borderWidth: "1.5px",
               },
+            },
+            "& input::placeholder": {
+              color: "#5E7377",
+              opacity: 1,
             },
           }}
         />
@@ -412,17 +546,17 @@ export default function ChatPanel() {
           onClick={handleSend}
           disabled={loading || !input.trim()}
           sx={{
-            bgcolor: tokens.accent,
+            bgcolor: tokens.teal,
             color: "#FFFFFF",
             width: 40,
             height: 40,
             transition: "background-color 0.15s ease",
             "&:hover": {
-              bgcolor: tokens.accentDeep,
+              bgcolor: tokens.tealDeep,
             },
             "&.Mui-disabled": {
-              bgcolor: "#E3E6EA",
-              color: "#B0B6BE",
+              bgcolor: "#2A3A3E",
+              color: "#5E7377",
             },
           }}
         >
