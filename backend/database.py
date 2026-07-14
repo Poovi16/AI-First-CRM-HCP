@@ -1,19 +1,28 @@
 import os
 
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Load local .env file (Render-la environment variables automatic-a varum)
+load_dotenv()
+
+# Local-la DATABASE_URL illa na MySQL use pannum
+# Render-la DATABASE_URL environment variable irundha adha use pannum
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "mysql+pymysql://root:Poovi16@localhost:3306/ai_crm_hcp_v2"
+)
 
 engine = create_engine(
     DATABASE_URL,
-    echo=True
+    echo=True,
 )
 
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
-    bind=engine
+    bind=engine,
 )
 
 Base = declarative_base()

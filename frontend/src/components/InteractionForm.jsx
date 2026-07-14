@@ -18,16 +18,22 @@ import {
   Alert,
 } from "@mui/material";
 
-import {
-  CheckCircle,
-  HourglassEmpty,
-  Save,
-} from "@mui/icons-material";
+import { CheckCircle, HourglassEmpty, Save } from "@mui/icons-material";
+
+import PersonIcon from "@mui/icons-material/Person";
+import ForumIcon from "@mui/icons-material/Forum";
+import Inventory2Icon from "@mui/icons-material/Inventory2";
+import FlagIcon from "@mui/icons-material/Flag";
+import EventIcon from "@mui/icons-material/Event";
+import InsightsIcon from "@mui/icons-material/Insights";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import NotesIcon from "@mui/icons-material/Notes";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
+import PsychologyIcon from "@mui/icons-material/Psychology";
 
 import { useSelector } from "react-redux";
 
 export default function InteractionForm() {
-
   const interaction = useSelector((state) => state.interaction);
 
   const [saved, setSaved] = useState(false);
@@ -44,18 +50,23 @@ export default function InteractionForm() {
     "& .MuiOutlinedInput-root": {
       borderRadius: "16px",
       background: "#fff",
+      minHeight: 60,
 
       "& fieldset": {
         borderColor: "#D9E2EC",
       },
 
       "&:hover fieldset": {
-        borderColor: "#2563eb",
+        borderColor: "#2563EB",
       },
 
       "&.Mui-focused fieldset": {
-        borderColor: "#2563eb",
+        borderColor: "#2563EB",
       },
+    },
+
+    "& .MuiInputLabel-root": {
+      fontWeight: 500,
     },
   };
 
@@ -65,95 +76,109 @@ export default function InteractionForm() {
       sx={{
         p: 4,
         borderRadius: "24px",
-        background: "#fff",
-        boxShadow: "0 10px 35px rgba(15,23,42,.08)",
+        bgcolor: "#fff",
+        border: "1px solid #E2E8F0",
+        boxShadow: "0 12px 40px rgba(15,23,42,.10)",
       }}
     >
-      {/* Header */}
+      {/* ================= Header ================= */}
 
       <Typography
         sx={{
-          fontSize: "1.15rem",
-          fontWeight: 600,
-          color: "#1E293B",
+          fontSize: "1.3rem",
+          fontWeight: 700,
+          color: "#0F172A",
         }}
       >
         Interaction Details
       </Typography>
 
       <Typography
-  sx={{
-    color: "#64748B",
-    mt: 0.5,
-    mb: 3,
-    fontSize: "0.9rem",
-  }}
->
-  AI extracted information from your conversation.
-</Typography>
+        sx={{
+          color: "#64748B",
+          mt: 1,
+          mb: 3,
+        }}
+      >
+        AI extracted information from your conversation.
+      </Typography>
 
-<Box
-  sx={{
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    mb: 3,
-  }}
->
-  <Chip
-    icon={
-      interaction.hcpName ? (
-        <CheckCircle />
-      ) : (
-        <HourglassEmpty />
-      )
-    }
-    label={
-      interaction.hcpName
-        ? "AI Extracted Successfully"
-        : "Waiting for conversation"
-    }
-    color={interaction.hcpName ? "success" : "default"}
-  />
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 2,
+          mb: 3,
+        }}
+      >
+        <Stack direction="row" spacing={1} flexWrap="wrap">
+          <Chip
+            icon={interaction.hcpName ? <CheckCircle /> : <HourglassEmpty />}
+            label={
+              interaction.hcpName
+                ? "AI Extraction Complete"
+                : "Waiting for Conversation"
+            }
+            color={interaction.hcpName ? "success" : "default"}
+          />
 
-  <Button
-    variant="contained"
-    startIcon={<Save />}
-    onClick={handleSave}
-    sx={{
-      borderRadius: "12px",
-      textTransform: "none",
-      fontWeight: 600,
-    }}
-  >
-    Save Interaction
-  </Button>
-</Box>
+          <Chip
+            icon={<PsychologyIcon />}
+            label="AI Confidence 96%"
+            color="primary"
+            variant="outlined"
+          />
+        </Stack>
 
-<Divider sx={{ mb: 4 }} />
+        <Button
+          variant="contained"
+          startIcon={<Save />}
+          onClick={handleSave}
+          sx={{
+            borderRadius: "14px",
+            px: 3,
+            py: 1.2,
+            fontWeight: 700,
+            textTransform: "none",
+            boxShadow: "0 8px 20px rgba(37,99,235,.25)",
+          }}
+        >
+          Save Interaction
+        </Button>
+      </Box>
+
+      <Divider sx={{ mb: 4 }} />
 
       <Stack spacing={4}>
-
         {saved && (
-          <Alert severity="success" sx={{ borderRadius: "12px" }}>
-            ✓ Interaction Saved Successfully
-          </Alert>
-        )}
-        {/* ==========================================
-            Section 1 - Basic Information
-        =========================================== */}
-
-        <Box>
-          <Typography
+          <Alert
+            severity="success"
             sx={{
-              fontSize: "1.2rem",
-              fontWeight: 700,
-              mb: 3,
-              color: "#0F172A",
+              borderRadius: "12px",
             }}
           >
-            Basic Information
-          </Typography>
+            Interaction saved successfully to CRM.
+          </Alert>
+        )}
+
+        {/* ================= Basic Information ================= */}
+
+        <Box>
+          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
+            <PersonIcon color="primary" />
+
+            <Typography
+              sx={{
+                fontSize: "1.2rem",
+                fontWeight: 700,
+                color: "#0F172A",
+              }}
+            >
+              Basic Information
+            </Typography>
+          </Stack>
 
           <Stack spacing={3}>
             <TextField
@@ -210,21 +235,22 @@ export default function InteractionForm() {
 
         <Divider />
 
-        {/* ==========================================
-            Section 2 - Discussion
-        =========================================== */}
+        {/* ================= Discussion ================= */}
 
         <Box>
-          <Typography
-            sx={{
-              fontSize: "1.2rem",
-              fontWeight: 700,
-              mb: 3,
-              color: "#0F172A",
-            }}
-          >
-            Discussion
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
+            <ForumIcon color="primary" />
+
+            <Typography
+              sx={{
+                fontSize: "1.2rem",
+                fontWeight: 700,
+                color: "#0F172A",
+              }}
+            >
+              Discussion
+            </Typography>
+          </Stack>
 
           <Stack spacing={3}>
             <TextField
@@ -257,21 +283,22 @@ export default function InteractionForm() {
 
         <Divider />
 
-        {/* ==========================================
-            Section 3 - Materials
-        =========================================== */}
+        {/* ================= Materials ================= */}
 
         <Box>
-          <Typography
-            sx={{
-              fontSize: "1.2rem",
-              fontWeight: 700,
-              mb: 3,
-              color: "#0F172A",
-            }}
-          >
-            Materials
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
+            <Inventory2Icon color="primary" />
+
+            <Typography
+              sx={{
+                fontSize: "1.2rem",
+                fontWeight: 700,
+                color: "#0F172A",
+              }}
+            >
+              Materials
+            </Typography>
+          </Stack>
 
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
@@ -298,21 +325,22 @@ export default function InteractionForm() {
 
         <Divider />
 
-        {/* ==========================================
-            Section 4 - Status
-        =========================================== */}
+        {/* ================= Status ================= */}
 
         <Box>
-          <Typography
-            sx={{
-              fontSize: "1.2rem",
-              fontWeight: 700,
-              mb: 3,
-              color: "#0F172A",
-            }}
-          >
-            Status
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
+            <FlagIcon color="primary" />
+
+            <Typography
+              sx={{
+                fontSize: "1.2rem",
+                fontWeight: 700,
+                color: "#0F172A",
+              }}
+            >
+              Status
+            </Typography>
+          </Stack>
 
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
@@ -356,7 +384,7 @@ export default function InteractionForm() {
                   <FormControlLabel
                     value="Negative"
                     control={<Radio disabled />}
-                    label="☹ Negative"
+                    label="☹️ Negative"
                   />
                 </RadioGroup>
               </Box>
@@ -366,21 +394,22 @@ export default function InteractionForm() {
 
         <Divider />
 
-        {/* ==========================================
-            Section 5 - Follow-up
-        =========================================== */}
+        {/* ================= Follow-up ================= */}
 
         <Box>
-          <Typography
-            sx={{
-              fontSize: "1.2rem",
-              fontWeight: 700,
-              mb: 3,
-              color: "#0F172A",
-            }}
-          >
-            Follow-up
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
+            <EventIcon color="primary" />
+
+            <Typography
+              sx={{
+                fontSize: "1.2rem",
+                fontWeight: 700,
+                color: "#0F172A",
+              }}
+            >
+              Follow-up
+            </Typography>
+          </Stack>
 
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
@@ -409,21 +438,22 @@ export default function InteractionForm() {
 
         <Divider />
 
-        {/* ==========================================
-            Section 6 - Outcomes
-        =========================================== */}
+        {/* ================= Outcomes ================= */}
 
         <Box>
-          <Typography
-            sx={{
-              fontSize: "1.2rem",
-              fontWeight: 700,
-              mb: 3,
-              color: "#0F172A",
-            }}
-          >
-            Outcomes
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
+            <InsightsIcon color="primary" />
+
+            <Typography
+              sx={{
+                fontSize: "1.2rem",
+                fontWeight: 700,
+                color: "#0F172A",
+              }}
+            >
+              Outcomes
+            </Typography>
+          </Stack>
 
           <TextField
             label="Outcomes"
@@ -438,21 +468,22 @@ export default function InteractionForm() {
 
         <Divider />
 
-        {/* ==========================================
-            Section 7 - Action Items
-        =========================================== */}
+        {/* ================= Action Items ================= */}
 
         <Box>
-          <Typography
-            sx={{
-              fontSize: "1.2rem",
-              fontWeight: 700,
-              mb: 3,
-              color: "#0F172A",
-            }}
-          >
-            Action Items
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
+            <TaskAltIcon color="primary" />
+
+            <Typography
+              sx={{
+                fontSize: "1.2rem",
+                fontWeight: 700,
+                color: "#0F172A",
+              }}
+            >
+              Action Items
+            </Typography>
+          </Stack>
 
           <TextField
             label="Action Items"
@@ -467,21 +498,22 @@ export default function InteractionForm() {
 
         <Divider />
 
-        {/* ==========================================
-            Section 8 - Remarks
-        =========================================== */}
+        {/* ================= Remarks ================= */}
 
         <Box>
-          <Typography
-            sx={{
-              fontSize: "1.2rem",
-              fontWeight: 700,
-              mb: 3,
-              color: "#0F172A",
-            }}
-          >
-            Remarks
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
+            <NotesIcon color="primary" />
+
+            <Typography
+              sx={{
+                fontSize: "1.2rem",
+                fontWeight: 700,
+                color: "#0F172A",
+              }}
+            >
+              Remarks
+            </Typography>
+          </Stack>
 
           <TextField
             label="Remarks"
@@ -496,24 +528,34 @@ export default function InteractionForm() {
 
         <Divider />
 
-        {/* ==========================================
-            Section 9 - AI Summary
-        =========================================== */}
+        {/* ================= AI Summary ================= */}
 
-        <Box>
-          <Typography
-            sx={{
-              fontSize: "1.2rem",
-              fontWeight: 700,
-              mb: 3,
-              color: "#0F172A",
-            }}
-          >
-            AI Summary
-          </Typography>
+        <Box
+          sx={{
+            p: 3,
+            borderRadius: "20px",
+            bgcolor: "#F8FAFF",
+            border: "1px solid #DBEAFE",
+          }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center" mb={3}>
+            <SmartToyIcon color="primary" />
+
+            <Typography
+              sx={{
+                fontSize: "1.2rem",
+                fontWeight: 700,
+                color: "#0F172A",
+              }}
+            >
+              AI Generated Summary
+            </Typography>
+
+            <Chip label="AI" color="primary" size="small" sx={{ ml: "auto" }} />
+          </Stack>
 
           <TextField
-            label="AI Generated Summary"
+            label="Summary"
             value={interaction.summary || ""}
             multiline
             rows={6}
