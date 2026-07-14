@@ -11,7 +11,7 @@ load_dotenv()
 # Render-la DATABASE_URL environment variable irundha adha use pannum
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "mysql+pymysql://root:Poovi16@localhost:3306/ai_crm_hcp_v2"
+    
 )
 
 engine = create_engine(
