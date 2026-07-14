@@ -171,6 +171,7 @@ Conversation:
 
             "outcomes": "",
             "actionItems": "",
+            "nextSteps": "",
             "remarks": "",
             "summary": ""
         }

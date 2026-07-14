@@ -204,79 +204,137 @@ export default function ChatPanel() {
     setInput("");
   };
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
+ const handleSend = async () => {
+  if (!input.trim()) return;
 
-    const userMessage = {
-      role: "user",
-      content: input.trim(),
-      time: formatTime(),
-    };
+  const message = input.trim();
 
-    setMessages((prev) => [...prev, userMessage]);
-
-    setInput("");
-    setLoading(true);
-
-    try {
-      const response = await sendChat(input.trim(), interaction.id);
-
-      console.log("Backend Response:", response);
-
-      // If backend says the interaction id we sent doesn't exist,
-      // reset to a fresh interaction instead of getting stuck.
-      if (response?.error === "Interaction not found.") {
-        dispatch(resetInteraction());
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content:
-              "That interaction no longer exists, so I've started a new one. Please resend your message.",
-            time: formatTime(),
-          },
-        ]);
-
-        return;
-      }
-
-      if (response?.data) {
-        console.log("AI Extracted Data:", response.data);
-
-        dispatch(
-          updateInteraction({
-            ...response.data,
-            id: response.id,
-          }),
-        );
-      }
-
-      const botReply = response?.reply || response?.message || "Done.";
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: botReply,
-          time: formatTime(),
-        },
-      ]);
-    } catch (error) {
-      console.error("Chat Error:", error);
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Failed to connect with backend.",
-          time: formatTime(),
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+  const userMessage = {
+    role: "user",
+    content: message,
+    time: formatTime(),
   };
+
+  setMessages((prev) => [...prev, userMessage]);
+
+  setInput("");
+  setLoading(true);
+
+  try {
+    const response = await sendChat(message, interaction.id);
+
+    console.log("Backend Response:", response);
+
+    // Interaction not found
+    if (response?.error === "Interaction not found.") {
+      dispatch(resetInteraction());
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "That interaction no longer exists. I've started a new interaction. Please send your message again.",
+          time: formatTime(),
+        },
+      ]);
+
+      return;
+    }
+
+    // Update Redux with extracted data
+    if (response?.data) {
+      const interactionData = {
+        ...response.data,
+         id: response.id ?? response.data.id,
+        
+      };
+
+      console.log("Updating Redux:", interactionData);
+
+      dispatch(updateInteraction(interactionData));
+
+    }
+
+    let botReply = "Interaction processed successfully.";
+
+      if (response.reply) {
+      botReply = response.reply;
+      } else if (response.message) {
+        botReply = response.message;
+      }  
+
+      if (response.data?.summary) {
+         botReply += "\n\nSummary:\n" + response.data.summary;
+      }
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content: botReply,
+        time: formatTime(),
+      },
+    ]);
+  } catch (error) {
+    console.error("Chat Error:", error);
+
+    let errorMessage = "Failed to connect with backend.";
+
+    // Timeout (Render cold start)
+    if (
+      error.code === "ECONNABORTED" ||
+      error.message?.toLowerCase().includes("timeout")
+    ) {
+      errorMessage =
+        "Backend is starting up (Render cold start). Please wait 30-60 seconds and try again.";
+    }
+
+    // Backend returned an error
+    else if (error.response) {
+      const status = error.response.status;
+
+      switch (status) {
+        case 400:
+          errorMessage =
+            error.response.data?.error || "Bad request.";
+          break;
+
+        case 404:
+          errorMessage = "API endpoint not found.";
+          break;
+
+        case 500:
+          errorMessage =
+            error.response.data?.error ||
+            "Internal server error.";
+          break;
+
+        default:
+          errorMessage =
+            error.response.data?.error ||
+            `Server Error (${status})`;
+      }
+    }
+
+    // Network error
+    else if (error.request) {
+      errorMessage =
+        "Unable to reach the backend. If this is the first request, Render may be waking up. Please wait 30-60 seconds and try again.";
+    }
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content: errorMessage,
+        time: formatTime(),
+      },
+    ]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <Paper

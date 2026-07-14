@@ -74,6 +74,21 @@ export default function InteractionForm() {
 
   const [saved, setSaved] = useState(false);
 
+  const formatTime = (time) => {
+  if (!time) return "";
+
+  const [hour, minute] = time.split(":");
+
+  const date = new Date();
+  date.setHours(parseInt(hour), parseInt(minute));
+
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
   const handleSave = () => {
     setSaved(true);
 
@@ -274,7 +289,7 @@ export default function InteractionForm() {
               <Grid item xs={12} md={6}>
                 <TextField
                   label="Time"
-                  value={interaction.time || ""}
+                  value={formatTime(interaction.time)}
                   InputProps={{ readOnly: true }}
                   fullWidth
                   sx={fieldStyle}

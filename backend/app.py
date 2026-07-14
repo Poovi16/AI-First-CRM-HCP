@@ -11,7 +11,9 @@ from tools import (
 )
 
 from database import SessionLocal, engine
-from db_models import Base
+from database import Base
+from db_models import Interaction
+Base.metadata.create_all(bind=engine)
 
 from crud import (
     create_interaction,
@@ -113,13 +115,12 @@ async def chat(request: ChatRequest):
             return {
 
                 "message": "Interaction Saved Successfully",
-
                 "id": saved.id,
-
-                "data": data
-
+                "data": {
+                    **data,
+                        "id": saved.id,
+                },
             }
-
 
 
         # -----------------------------
@@ -176,7 +177,6 @@ async def chat(request: ChatRequest):
             "nextSteps": existing.next_steps,
 
             "remarks": existing.remarks
-
         }
 
 
@@ -258,6 +258,8 @@ User Update:
                 "product":latest.product,
 
                 "materialsShared":latest.materials_shared,
+                
+                "samplesDistributed": latest.samples_distributed,
 
                 "sentiment":latest.sentiment,
 
@@ -268,6 +270,8 @@ User Update:
                 "followUpRequired":latest.follow_up_required,
 
                 "followUpDate":str(latest.follow_up_date or ""),
+                
+                "outcomes": latest.outcomes,
 
                 "actionItems":latest.action_items,
 
@@ -351,7 +355,35 @@ def get_single_interaction(
             }
 
 
-        return interaction
+        return {
+            "id": interaction.id,
+            "hcpName": interaction.hcp_name,
+            "interactionType": interaction.interaction_type,
+            "date": str(interaction.interaction_date or ""),
+            "time": interaction.interaction_time,
+            "attendees": interaction.attendees,
+
+            "topicsDiscussed": interaction.topics_discussed,
+            "productsDiscussed": interaction.products_discussed,
+            "product": interaction.product,
+
+            "materialsShared": interaction.materials_shared,
+            "samplesDistributed": interaction.samples_distributed,
+
+            "sentiment": interaction.sentiment,
+            "summary": interaction.summary,
+
+            "brochureShared": interaction.brochure_shared,
+
+            "followUpRequired": interaction.follow_up_required,
+            "followUpDate": str(interaction.follow_up_date or ""),
+
+            "outcomes": interaction.outcomes,
+
+            "actionItems": interaction.action_items,
+            "nextSteps": interaction.next_steps,
+            "remarks": interaction.remarks,
+        }
 
 
 

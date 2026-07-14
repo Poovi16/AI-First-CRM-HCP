@@ -36,9 +36,11 @@ def create_interaction(db: Session, data: dict):
         follow_up_date=data.get("followUpDate") or None,
 
         # CRM
+        outcomes=data.get("outcomes"),
         action_items=data.get("actionItems"),
         next_steps=data.get("nextSteps"),
         remarks=data.get("remarks"),
+        samples_distributed=data.get("samplesDistributed"),
     )
 
     db.add(interaction)
@@ -87,20 +89,30 @@ def update_interaction(
         return None
 
     field_mapping = {
+        
         "hcpName": "hcp_name",
         "interactionType": "interaction_type",
         "date": "interaction_date",
         "time": "interaction_time",
         "attendees": "attendees",
+
         "topicsDiscussed": "topics_discussed",
         "productsDiscussed": "products_discussed",
         "product": "product",
+
         "materialsShared": "materials_shared",
+        "samplesDistributed": "samples_distributed",
+
         "sentiment": "sentiment",
         "summary": "summary",
+
         "brochureShared": "brochure_shared",
+
         "followUpRequired": "follow_up_required",
         "followUpDate": "follow_up_date",
+
+        "outcomes": "outcomes",
+
         "actionItems": "action_items",
         "nextSteps": "next_steps",
         "remarks": "remarks",
