@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import date
+
 
 class InteractionResponse(BaseModel):
     id: int
@@ -7,7 +9,7 @@ class InteractionResponse(BaseModel):
     hcp_name: str
 
     interaction_type: Optional[str] = None
-    interaction_date: Optional[str] = None
+    interaction_date: Optional[date] = None
     interaction_time: Optional[str] = None
     attendees: Optional[str] = None
 
@@ -21,10 +23,10 @@ class InteractionResponse(BaseModel):
     sentiment: Optional[str] = None
     summary: Optional[str] = None
 
-    brochure_shared: bool
+    brochure_shared: bool = False
 
-    follow_up_required: bool
-    follow_up_date: Optional[str] = None
+    follow_up_required: bool = False
+    follow_up_date: Optional[date] = None
 
     outcomes: Optional[str] = None
 

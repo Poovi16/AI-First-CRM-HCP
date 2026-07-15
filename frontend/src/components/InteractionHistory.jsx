@@ -63,6 +63,10 @@ export default function InteractionHistory() {
     try {
       const data = await getInteractions();
 
+      console.log("API Response:", data);
+      console.log("Is Array:", Array.isArray(data));
+      console.log("Length:", data.length);
+
       setRows(normalizeToArray(data));
     } catch (err) {
       console.error(err);
@@ -176,9 +180,9 @@ export default function InteractionHistory() {
             <TableRow key={row.id}>
               <TableCell>{row.hcp_name}</TableCell>
 
-              <TableCell>{row.specialty || "-"}</TableCell>
+              <TableCell>{row.interaction_type || "-"}</TableCell>
 
-              <TableCell>{row.date || "-"}</TableCell>
+              <TableCell>{row.interaction_date || "-"}</TableCell>
 
               <TableCell>
                 <Stack direction="row" spacing={1}>

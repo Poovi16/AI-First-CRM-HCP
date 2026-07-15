@@ -48,7 +48,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173",],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -304,93 +304,46 @@ User Update:
 # =====================================
 # GET ALL INTERACTIONS
 # =====================================
-
 @app.get(
     "/interactions",
     response_model=list[InteractionResponse]
 )
 def get_interactions():
 
-
-    db=SessionLocal()
-
-    try:
-
-        return get_all_interactions(db)
-
-    finally:
-
-        db.close()
-
-
-
-
-# =====================================
-# GET SINGLE
-# =====================================
-
-@app.get(
-    "/interaction/{interaction_id}"
-)
-def get_single_interaction(
-        interaction_id:int
-):
-
-
-    db=SessionLocal()
-
+    db = SessionLocal()
 
     try:
 
-        interaction=get_interaction(
-            db,
-            interaction_id
-        )
+        interactions = get_all_interactions(db)
 
-
-        if interaction is None:
-
-            return {
-                "error":"Interaction not found"
+        return [
+            {
+                "id": i.id,
+                "hcp_name": i.hcp_name,
+                "interaction_type": i.interaction_type,
+                "interaction_date": str(i.interaction_date) if i.interaction_date else None,
+                "interaction_time": i.interaction_time,
+                "attendees": i.attendees,
+                "topics_discussed": i.topics_discussed,
+                "products_discussed": i.products_discussed,
+                "product": i.product,
+                "materials_shared": i.materials_shared,
+                "samples_distributed": i.samples_distributed,
+                "sentiment": i.sentiment,
+                "summary": i.summary,
+                "brochure_shared": i.brochure_shared,
+                "follow_up_required": i.follow_up_required,
+                "follow_up_date": str(i.follow_up_date) if i.follow_up_date else None,
+                "outcomes": i.outcomes,
+                "action_items": i.action_items,
+                "next_steps": i.next_steps,
+                "remarks": i.remarks,
             }
-
-
-        return {
-            "id": interaction.id,
-            "hcpName": interaction.hcp_name,
-            "interactionType": interaction.interaction_type,
-            "date": str(interaction.interaction_date or ""),
-            "time": interaction.interaction_time,
-            "attendees": interaction.attendees,
-
-            "topicsDiscussed": interaction.topics_discussed,
-            "productsDiscussed": interaction.products_discussed,
-            "product": interaction.product,
-
-            "materialsShared": interaction.materials_shared,
-            "samplesDistributed": interaction.samples_distributed,
-
-            "sentiment": interaction.sentiment,
-            "summary": interaction.summary,
-
-            "brochureShared": interaction.brochure_shared,
-
-            "followUpRequired": interaction.follow_up_required,
-            "followUpDate": str(interaction.follow_up_date or ""),
-
-            "outcomes": interaction.outcomes,
-
-            "actionItems": interaction.action_items,
-            "nextSteps": interaction.next_steps,
-            "remarks": interaction.remarks,
-        }
-
-
+            for i in interactions
+        ]
 
     finally:
-
         db.close()
-
 
 
 
