@@ -13,22 +13,26 @@ The AI Assistant helps users interact with CRM data through natural language que
 ## Features
 
 ### CRM Management
+
 - Create, view, update, and manage HCP interaction records
 - Store and retrieve customer interaction details
 - Track interaction history efficiently
 
 ### AI Assistant
+
 - Chat-based AI interface for CRM operations
 - Natural language query processing
 - Intelligent responses using LLM integration
 - AI-driven workflow automation
 
 ### LangGraph AI Agent
+
 - Agent-based decision workflow
 - Tool calling capabilities
 - Automated CRM operations through AI tools
 
 ### Dashboard
+
 - Modern React-based user interface
 - Interaction history management
 - Easy navigation and user-friendly experience
@@ -38,6 +42,7 @@ The AI Assistant helps users interact with CRM data through natural language que
 ## Tech Stack
 
 ### Frontend
+
 - React.js
 - Redux Toolkit
 - Material UI
@@ -45,6 +50,7 @@ The AI Assistant helps users interact with CRM data through natural language que
 - Vite
 
 ### Backend
+
 - Python
 - FastAPI
 - SQLAlchemy
@@ -52,47 +58,49 @@ The AI Assistant helps users interact with CRM data through natural language que
 - Pydantic
 
 ### AI / LLM
+
 - LangGraph
 - LangChain
 - Large Language Model API Integration
 - AI Agent Workflow
 
 ### Development Tools
+
 - Git
 - GitHub
 - VS Code
 
 ---
 
-## Project Structure
-AI-First-CRM-HCP
+## 📂 Project Structure
+
+```text
+AI-First-CRM-HCP/
 │
-├── backend
-│ │
-│ ├── app.py # FastAPI application entry point
-│ ├── agent.py # AI agent implementation
-│ ├── graph.py # LangGraph workflow
-│ ├── tools.py # AI tools and CRM operations
-│ ├── models.py # Database models
-│ ├── schemas.py # API schemas
-│ ├── crud.py # Database operations
-│ ├── database.py # Database configuration
-│ └── requirements.txt # Backend dependencies
+├── backend/
+│   ├── app.py              # FastAPI application entry point
+│   ├── agent.py            # AI agent implementation
+│   ├── graph.py            # LangGraph workflow
+│   ├── tools.py            # AI tools and CRM operations
+│   ├── models.py           # Pydantic request models
+│   ├── schemas.py          # API response schemas
+│   ├── crud.py             # Database operations
+│   ├── db_models.py        # SQLAlchemy database models
+│   ├── database.py         # Database configuration
+│   └── requirements.txt    # Backend dependencies
 │
-├── frontend
-│ │
-│ ├── src
-│ │ ├── components # Reusable UI components
-│ │ ├── pages # Application pages
-│ │ ├── redux # State management
-│ │ └── services # API services
-│ │
-│ ├── package.json
-│ └── vite.config.js
+├── frontend/
+│   ├── src/
+│   │   ├── components/     # Reusable UI components
+│   │   ├── pages/          # Application pages
+│   │   ├── redux/          # Redux state management
+│   │   └── services/       # API services
+│   │
+│   ├── package.json
+│   └── vite.config.js
 │
 └── README.md
-
----
+```
 
 # Setup Instructions
 
@@ -100,3 +108,4 @@ AI-First-CRM-HCP
 
 ```bash
 git clone https://github.com/Poovi16/AI-First-CRM-HCP.git
+```
