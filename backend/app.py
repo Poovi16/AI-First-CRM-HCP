@@ -48,7 +48,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173",  "https://ai-first-crm-hcp-aefk.vercel.app/",],
+    allow_origins=["http://localhost:5173",  "https://ai-first-crm-hcp-six.vercel.app",],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -71,7 +71,6 @@ def home():
 # =====================================
 # CHAT API
 # =====================================
-
 @app.post("/chat")
 async def chat(request: ChatRequest):
 
@@ -79,12 +78,16 @@ async def chat(request: ChatRequest):
 
     try:
 
+        print("========== NEW CHAT REQUEST ==========")
+        print("Request:", request)
+
         # -----------------------------
         # CREATE NEW INTERACTION
         # -----------------------------
-
         if request.interaction_id is None:
 
+            print("Creating new interaction...")
+            print("Calling log_interaction.invoke()")
 
             result = log_interaction.invoke(
                 {
@@ -92,108 +95,81 @@ async def chat(request: ChatRequest):
                 }
             )
 
+            print("LLM Raw Result:", result)
 
             if isinstance(result, dict):
                 data = result
-
             else:
                 data = json.loads(result)
 
-
+            print("Parsed Data:", data)
 
             if "error" in data:
+                print("LLM Returned Error:", data)
                 return data
 
+            print("Saving interaction to database...")
 
+            saved = create_interaction(db, data)
 
-            saved = create_interaction(
-                db,
-                data
-            )
-
+            print("Saved Successfully. ID =", saved.id)
 
             return {
-
                 "message": "Interaction Saved Successfully",
                 "id": saved.id,
                 "data": {
                     **data,
-                        "id": saved.id,
+                    "id": saved.id,
                 },
             }
-
 
         # -----------------------------
         # UPDATE EXISTING
         # -----------------------------
-
+        print("Updating interaction:", request.interaction_id)
 
         existing = get_interaction(
             db,
             request.interaction_id
         )
 
-
         if existing is None:
-
+            print("Interaction not found.")
             return {
                 "error": "Interaction not found."
             }
 
-
-
         existing_data = {
-
             "hcpName": existing.hcp_name,
-
             "interactionType": existing.interaction_type,
-
             "date": str(existing.interaction_date or ""),
-
             "time": existing.interaction_time,
-
             "attendees": existing.attendees,
-
             "topicsDiscussed": existing.topics_discussed,
-
             "productsDiscussed": existing.products_discussed,
-
             "product": existing.product,
-
             "materialsShared": existing.materials_shared,
-
             "sentiment": existing.sentiment,
-
             "summary": existing.summary,
-
             "brochureShared": existing.brochure_shared,
-
             "followUpRequired": existing.follow_up_required,
-
             "followUpDate": str(existing.follow_up_date or ""),
-
             "actionItems": existing.action_items,
-
             "nextSteps": existing.next_steps,
-
             "remarks": existing.remarks
         }
 
-
-
         prompt = f"""
-
 Existing Interaction:
 
-{json.dumps(existing_data,indent=2)}
-
+{json.dumps(existing_data, indent=2)}
 
 User Update:
 
 {request.message}
-
 """
 
+        print("Calling edit_interaction.invoke()")
 
         result = edit_interaction_ai.invoke(
             {
@@ -201,23 +177,17 @@ User Update:
             }
         )
 
+        print("LLM Update Result:", result)
 
-
-        if isinstance(result,dict):
-
-            updated_fields=result
-
+        if isinstance(result, dict):
+            updated_fields = result
         else:
+            updated_fields = json.loads(result)
 
-            updated_fields=json.loads(result)
-
-
+        print("Parsed Update:", updated_fields)
 
         if "error" in updated_fields:
-
             return updated_fields
-
-
 
         update_interaction(
             db,
@@ -225,218 +195,49 @@ User Update:
             updated_fields
         )
 
-
-
         latest = get_interaction(
             db,
             request.interaction_id
         )
 
+        print("Update Successful")
 
         return {
-
-            "message":"Interaction Updated Successfully",
-
-            "id":latest.id,
-
-            "data":{
-
-                "hcpName":latest.hcp_name,
-
-                "interactionType":latest.interaction_type,
-
-                "date":str(latest.interaction_date or ""),
-
-                "time":latest.interaction_time,
-
-                "attendees":latest.attendees,
-
-                "topicsDiscussed":latest.topics_discussed,
-
-                "productsDiscussed":latest.products_discussed,
-
-                "product":latest.product,
-
-                "materialsShared":latest.materials_shared,
-                
+            "message": "Interaction Updated Successfully",
+            "id": latest.id,
+            "data": {
+                "hcpName": latest.hcp_name,
+                "interactionType": latest.interaction_type,
+                "date": str(latest.interaction_date or ""),
+                "time": latest.interaction_time,
+                "attendees": latest.attendees,
+                "topicsDiscussed": latest.topics_discussed,
+                "productsDiscussed": latest.products_discussed,
+                "product": latest.product,
+                "materialsShared": latest.materials_shared,
                 "samplesDistributed": latest.samples_distributed,
-
-                "sentiment":latest.sentiment,
-
-                "summary":latest.summary,
-
-                "brochureShared":latest.brochure_shared,
-
-                "followUpRequired":latest.follow_up_required,
-
-                "followUpDate":str(latest.follow_up_date or ""),
-                
+                "sentiment": latest.sentiment,
+                "summary": latest.summary,
+                "brochureShared": latest.brochure_shared,
+                "followUpRequired": latest.follow_up_required,
+                "followUpDate": str(latest.follow_up_date or ""),
                 "outcomes": latest.outcomes,
-
-                "actionItems":latest.action_items,
-
-                "nextSteps":latest.next_steps,
-
-                "remarks":latest.remarks
-
+                "actionItems": latest.action_items,
+                "nextSteps": latest.next_steps,
+                "remarks": latest.remarks
             }
-
         }
-
-
 
     except Exception as e:
+        import traceback
 
-
-        return {
-            "error":str(e)
-        }
-
-
-
-    finally:
-
-        db.close()
-
-
-
-
-# =====================================
-# GET ALL INTERACTIONS
-# =====================================
-@app.get(
-    "/interactions",
-    response_model=list[InteractionResponse]
-)
-def get_interactions():
-
-    db = SessionLocal()
-
-    try:
-
-        interactions = get_all_interactions(db)
-
-        return [
-            {
-                "id": i.id,
-                "hcp_name": i.hcp_name,
-                "interaction_type": i.interaction_type,
-                "interaction_date": str(i.interaction_date) if i.interaction_date else None,
-                "interaction_time": i.interaction_time,
-                "attendees": i.attendees,
-                "topics_discussed": i.topics_discussed,
-                "products_discussed": i.products_discussed,
-                "product": i.product,
-                "materials_shared": i.materials_shared,
-                "samples_distributed": i.samples_distributed,
-                "sentiment": i.sentiment,
-                "summary": i.summary,
-                "brochure_shared": i.brochure_shared,
-                "follow_up_required": i.follow_up_required,
-                "follow_up_date": str(i.follow_up_date) if i.follow_up_date else None,
-                "outcomes": i.outcomes,
-                "action_items": i.action_items,
-                "next_steps": i.next_steps,
-                "remarks": i.remarks,
-            }
-            for i in interactions
-        ]
-
-    finally:
-        db.close()
-
-
-
-# =====================================
-# MANUAL UPDATE
-# =====================================
-
-@app.put(
-    "/interaction/{interaction_id}"
-)
-def update_single_interaction(
-        interaction_id:int,
-        data:dict
-):
-
-
-    db=SessionLocal()
-
-
-    try:
-
-
-        updated=update_interaction(
-            db,
-            interaction_id,
-            data
-        )
-
-
-        if updated is None:
-
-            return {
-                "error":"Interaction not found"
-            }
-
+        print("========== CHAT ERROR ==========")
+        print(str(e))
+        traceback.print_exc()
 
         return {
-
-            "message":"Interaction Updated Successfully",
-
-            "data":updated
-
+            "error": str(e)
         }
 
-
-
     finally:
-
-        db.close()
-
-
-
-
-# =====================================
-# DELETE
-# =====================================
-
-@app.delete(
-    "/interaction/{interaction_id}"
-)
-def delete_single_interaction(
-        interaction_id:int
-):
-
-
-    db=SessionLocal()
-
-
-    try:
-
-
-        deleted=delete_interaction(
-            db,
-            interaction_id
-        )
-
-
-        if not deleted:
-
-            return {
-                "error":"Interaction not found"
-            }
-
-
-
-        return {
-
-            "message":"Interaction Deleted Successfully"
-
-        }
-
-
-
-    finally:
-
         db.close()
